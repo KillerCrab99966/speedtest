@@ -12,13 +12,13 @@ func runSpeedtest() ([]SpeedtestResult, error) {
 
 	out, err := cmd.Output()
 	if err != nil {
-		return []SpeedtestResult{}, fmt.Errorf("failed to execute command: %w", err)
+		return nil, fmt.Errorf("failed to execute command: %w", err)
 	}
 
 	// Parse JSON
 	var results []SpeedtestResult
 	if err := json.Unmarshal(out, &results); err != nil {
-		return []SpeedtestResult{}, fmt.Errorf("failed to parse JSON: %w", err)
+		return nil, fmt.Errorf("failed to parse JSON: %w", err)
 	}
 
 	return results, nil

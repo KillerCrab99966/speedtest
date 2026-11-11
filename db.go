@@ -3,6 +3,8 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"log"
+	"time"
 
 	_ "modernc.org/sqlite"
 )
@@ -22,9 +24,10 @@ type ServerInfo struct {
 	Name string `json:"name"`
 }
 
-func initDB(file string) (*sql.DB, error) {
+func initDB(path string) (*sql.DB, error) {
 	// Connect to the DB
-	db, err := sql.Open("sqlite", file)
+	log.Printf("Connecting to SQLite database: %v", path)
+	db, err := sql.Open("sqlite", path)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open db: %w", err)
 	}
@@ -70,4 +73,31 @@ func saveResult(db *sql.DB, r SpeedtestResult) error {
 	)
 
 	return err
+}
+
+func getResultsAsJSON(db *sql.DB, t time.Duration) ([]byte, error) {
+	query := `
+    SELECT json_group_array(
+        json_object(
+            'timestamp', timestamp,
+            'server', json_object('name', server_name),
+            'bytes_sent', bytes_sent,
+            'bytes_received', bytes_received,
+            'ping', ping,
+            'jitter', jitter,
+            'upload', upload,
+            'download', download
+        )
+    )
+    FROM results
+    WHERE julianday(timestamp) >= (julianday('now') - ?);
+    `
+	var jsonBytes []byte
+	err := db.QueryRow(query, t.Hours()/24).Scan(&jsonBytes)
+
+	if err != nil {
+		return nil, fmt.Errorf("query failed: %w", err)
+	}
+
+	return jsonBytes, nil
 }

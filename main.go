@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"log"
+	"net/http"
 
 	"github.com/netresearch/go-cron"
 )
@@ -14,13 +15,15 @@ func main() {
 	}
 	defer db.Close()
 
-	startCronTests(db)
+	c := startCronTests(db)
+	c.Start()
+	defer c.Stop()
 
-	// Keep the program running
-	select {}
+	mux := initRoutes(db)
+	startServer(mux)
 }
 
-func startCronTests(db *sql.DB) {
+func startCronTests(db *sql.DB) *cron.Cron {
 	c := cron.New()
 
 	// Run a speedtest every minute and store results
@@ -40,5 +43,18 @@ func startCronTests(db *sql.DB) {
 		log.Println("Speedtest completed and saved")
 	})
 
-	c.Start()
+	return c
+}
+
+func startServer(mux *http.ServeMux) {
+	server := &http.Server{
+		Addr:    ":8080",
+		Handler: mux,
+	}
+
+	log.Println("Server listening on:", server.Addr)
+
+	if err := server.ListenAndServe(); err != nil {
+		log.Fatalf("Could not listen on %s: %v\n", server.Addr, err)
+	}
 }
