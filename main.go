@@ -19,7 +19,7 @@ func main() {
 	c.Start()
 	defer c.Stop()
 
-	mux := initRoutes(db)
+	mux := initRoutes(db, c)
 	startServer(mux)
 }
 
@@ -28,6 +28,7 @@ func startCronTests(db *sql.DB) *cron.Cron {
 
 	// Run a speedtest every minute and store results
 	c.AddFunc("* * * * *", func() {
+		log.Println("Speedtest started...")
 		results, err := runSpeedtest()
 		if err != nil {
 			log.Printf("Failed to run speedtest: %v", err)
