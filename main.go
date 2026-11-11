@@ -1,26 +1,44 @@
 package main
 
 import (
-	"fmt"
+	"database/sql"
+	"log"
 
 	"github.com/netresearch/go-cron"
 )
 
 func main() {
-	c := cron.New()
+	db, err := initDB("results.db")
+	if err != nil {
+		log.Fatalf("Initialization error: %v", err)
+	}
+	defer db.Close()
 
-	// Run a speedtest every minute and print results
-	c.AddFunc("* * * * *", func() {
-		result, err := runSpeedtest()
-		if err != nil {
-			fmt.Println(err.Error())
-		}
-
-		fmt.Println(result)
-	})
-
-	c.Start()
+	startCronTests(db)
 
 	// Keep the program running
 	select {}
+}
+
+func startCronTests(db *sql.DB) {
+	c := cron.New()
+
+	// Run a speedtest every minute and store results
+	c.AddFunc("* * * * *", func() {
+		results, err := runSpeedtest()
+		if err != nil {
+			log.Printf("Failed to run speedtest: %v", err)
+		}
+
+		for _, r := range results {
+			err := saveResult(db, r)
+			if err != nil {
+				log.Printf("Failed to save result: %v", err)
+			}
+		}
+
+		log.Println("Speedtest completed and saved")
+	})
+
+	c.Start()
 }
