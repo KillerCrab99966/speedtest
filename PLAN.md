@@ -1,5 +1,5 @@
 1. ~~Conduct a speedtest~~
-2. Conduct speedtests periodically
+2. ~~Conduct speedtests periodically~~
 3. Save results to a db
     - SQLite
 4. Serve results as JSON at `/api/results`
