@@ -3,7 +3,6 @@ package main
 import (
 	"database/sql"
 	"log"
-	"net/http"
 
 	"github.com/netresearch/go-cron"
 )
@@ -45,17 +44,4 @@ func startCronTests(db *sql.DB) *cron.Cron {
 	})
 
 	return c
-}
-
-func startServer(mux *http.ServeMux) {
-	server := &http.Server{
-		Addr:    ":8080",
-		Handler: mux,
-	}
-
-	log.Println("Server listening on:", server.Addr)
-
-	if err := server.ListenAndServe(); err != nil {
-		log.Fatalf("Could not listen on %s: %v\n", server.Addr, err)
-	}
 }

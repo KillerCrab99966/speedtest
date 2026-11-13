@@ -13,7 +13,7 @@ import (
 func initRoutes(db *sql.DB, c *cron.Cron) *http.ServeMux {
 	mux := http.NewServeMux()
 
-	// Endpoints
+	// API Endpoints
 	mux.HandleFunc("GET /api/results", func(w http.ResponseWriter, r *http.Request) {
 		handleResults(db, w, r)
 	})
@@ -21,6 +21,10 @@ func initRoutes(db *sql.DB, c *cron.Cron) *http.ServeMux {
 	mux.HandleFunc("GET /api/next", func(w http.ResponseWriter, r *http.Request) {
 		handleNext(c, w, r)
 	})
+
+	// Static files
+	fileServer := http.FileServer(http.Dir("./web"))
+	mux.Handle("GET /", fileServer)
 
 	return mux
 }
@@ -46,4 +50,17 @@ func handleNext(c *cron.Cron, w http.ResponseWriter, _ *http.Request) {
 	// There will only ever be one job, so it is
 	// safe to take the first (and only) element
 	fmt.Fprint(w, c.Entries()[0].Next.Format(time.RFC3339))
+}
+
+func startServer(mux *http.ServeMux) {
+	server := &http.Server{
+		Addr:    ":8080",
+		Handler: mux,
+	}
+
+	log.Println("Server listening on:", server.Addr)
+
+	if err := server.ListenAndServe(); err != nil {
+		log.Fatalf("Could not listen on %s: %v\n", server.Addr, err)
+	}
 }
