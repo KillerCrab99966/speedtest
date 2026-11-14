@@ -15,6 +15,7 @@
 
 	--text-primary: hsl(0, 0%, 10%);
 	--text-secondary: hsl(0, 0%, 30%);
+	--text-link: hsl(220, 100%, 60%);
 
 	--next-test: hsl(39, 100%, 70%);
 	--next-test-border: hsl(39, 100%, 50%);
@@ -31,11 +32,18 @@ html {
 	background: var(--bg-base);
 }
 
+a {
+	color: var(--text-link);
+	text-decoration-line: none;
+}
+
+a:visited {
+	color: var(--text-link);
+}
+
 .main {
 	margin: 32px;
 	max-width: 1500px;
-	display: flex;
-	flex-direction: column;
 }
 
 .next-test-time {
@@ -73,6 +81,16 @@ html {
 	border-radius: 8px;
 	box-sizing: border-box;
 	/*box-shadow: 0 0 10px 5px rgba(0, 0, 0, 0.05);*/
+}
+
+.info-footer {
+	color: var(--text-secondary);
+	font-size: 1rem;
+	width: 100%;
+	padding-bottom: 16px;
+	display: flex;
+	justify-content: center;
+	align-items: center;
 }
 
 @media (min-width: 1080px) {
