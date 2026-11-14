@@ -1,8 +1,57 @@
-async function main() {
-	// Fetch the results
-	const results = await fetch_results();
-	console.info("Fetched results");
+let nextTestStartTime;
 
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+async function main() {
+	while (true) {
+		// Fetch the and update results
+		const results = await fetchResults();
+		if (results) {
+			console.log("Fetched results");
+			updateCharts(results);
+			console.log("Updated charts");
+		}
+
+		// Fetch and display the time of the next test
+		nextTestStartTime = await fetchNext();
+		if (!nextTestStartTime || isNaN(nextTestStartTime.getTime())) {
+			// Retry in 15 seconds if the fetch failed
+			console.log(
+				new Date().toLocaleTimeString(),
+				"Failed to fetch next test time; retrying in 15s",
+			);
+
+			await sleep(15000);
+			continue;
+		}
+
+		document.getElementById("next-test-time-text").innerText =
+			`Next speedtest: ${nextTestStartTime.toLocaleString()}`;
+
+		// Calculate time to next test finishing
+		const testDuration = 70000;
+		let timeUntilTestFinish =
+			nextTestStartTime.getTime() - Date.now() + testDuration;
+
+		if (timeUntilTestFinish <= 0) {
+			// If the test has already finished, check in 10s
+			console.log(
+				new Date().toLocaleTimeString(),
+				"Test finished; checking for next test in 10s",
+			);
+			timeUntilTestFinish = 10000;
+		} else {
+			console.log(
+				new Date().toLocaleTimeString(),
+				`Checking for test result in ${(timeUntilTestFinish / 1000).toFixed(0)}s`,
+			);
+		}
+
+		await sleep(timeUntilTestFinish);
+	}
+}
+
+function updateCharts(results) {
 	// Convert bytes to megabytes
 	results.forEach((r) => {
 		r.bytes_sent = Number((r.bytes_sent / (1024 * 1024)).toFixed(2));
@@ -55,9 +104,7 @@ async function main() {
 }
 
 function drawCharts(chartConfigs, results) {
-	const labels = results.map((item) =>
-		new Date(item.timestamp).toLocaleTimeString(),
-	);
+	const labels = results.map((item) => new Date(item.timestamp));
 
 	chartConfigs.forEach((config) => {
 		const data = results.map((item) => item[config.key]);
@@ -68,6 +115,11 @@ function drawCharts(chartConfigs, results) {
 function drawChart(canvasID, labels, config, data) {
 	const canvas = document.getElementById(canvasID);
 	if (!canvas) return;
+
+	const existingChart = Chart.getChart(canvas);
+	if (existingChart) {
+		existingChart.destroy();
+	}
 
 	return new Chart(canvas, {
 		type: "line",
@@ -87,15 +139,35 @@ function drawChart(canvasID, labels, config, data) {
 			responsive: true,
 			maintainAspectRatio: false,
 			scales: {
+				x: {
+					ticks: {
+						// Format the X-axis labels to show ONLY time
+						callback: function (val, _) {
+							const timestamp = this.getLabelForValue(val);
+							return new Date(timestamp).toLocaleTimeString();
+						},
+					},
+				},
 				y: {
 					beginAtZero: true,
+				},
+			},
+			plugins: {
+				tooltip: {
+					callbacks: {
+						// Format the hover tooltip to show BOTH date and time
+						title: function (context) {
+							const timestamp = context[0].label;
+							return new Date(timestamp).toLocaleString();
+						},
+					},
 				},
 			},
 		},
 	});
 }
 
-async function fetch_results() {
+async function fetchResults() {
 	try {
 		const response = await fetch("/api/results");
 
@@ -107,6 +179,23 @@ async function fetch_results() {
 		return results;
 	} catch (err) {
 		console.error("Error fetching data:", err.message);
+		return null;
+	}
+}
+
+async function fetchNext() {
+	try {
+		const response = await fetch("/api/next");
+
+		if (!response.ok) {
+			throw new Error("Failed to fetch next test time");
+		}
+
+		const next = await response.text();
+		return new Date(next);
+	} catch (err) {
+		console.error("Error fetching next test time:", err.message);
+		return null;
 	}
 }
 

@@ -7,6 +7,6 @@
 6. Serve a webpage with a nice UI to view the results
     1. ~~Fetch the results on load~~
     2. ~~Graph results~~
-    3. Fetch results after next test and display next test time
+    3. ~~Fetch results after next test and display next test time~~
     4. Dark mode
 7. Configuration
