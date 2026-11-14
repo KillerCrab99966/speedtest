@@ -6,9 +6,9 @@ import (
 	"os/exec"
 )
 
-func runSpeedtest() ([]SpeedtestResult, error) {
+func runSpeedtest(binary string) ([]SpeedtestResult, error) {
 	// Run the test
-	cmd := exec.Command("speedtest-cli", "--json")
+	cmd := exec.Command(binary, "--json")
 
 	out, err := cmd.Output()
 	if err != nil {

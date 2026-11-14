@@ -52,9 +52,9 @@ func handleNext(c *cron.Cron, w http.ResponseWriter, _ *http.Request) {
 	fmt.Fprint(w, c.Entries()[0].Next.Format(time.RFC3339))
 }
 
-func startServer(mux *http.ServeMux) {
+func startServer(mux *http.ServeMux, addr string) {
 	server := &http.Server{
-		Addr:    ":8080",
+		Addr:    addr,
 		Handler: mux,
 	}
 
