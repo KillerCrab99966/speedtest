@@ -9,4 +9,5 @@
     2. ~~Graph results~~
     3. ~~Fetch results after next test and display next test time~~
     4. Dark mode
-7. Configuration
+7. ~~Configuration~~
+8. README

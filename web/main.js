@@ -33,6 +33,13 @@ async function main() {
 		let timeUntilTestFinish =
 			nextTestStartTime.getTime() - Date.now() + testDuration;
 
+		// Ensure time is not greater than integer limit,
+		// otherwise it gets set to 0
+		const maxWaitTime = 2_147_483_647; // ~24.8 days
+		if (timeUntilTestFinish > maxWaitTime) {
+			timeUntilTestFinish = maxWaitTime;
+		}
+
 		if (timeUntilTestFinish <= 0) {
 			// If the test has already finished, check in 10s
 			console.log(
