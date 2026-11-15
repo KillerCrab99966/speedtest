@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"io/fs"
 	"log"
 	"net/http"
 	"time"
@@ -22,8 +23,14 @@ func initRoutes(db *sql.DB, c *cron.Cron) *http.ServeMux {
 		handleNext(c, w, r)
 	})
 
+	// Strip the prefix so files are served relative to root
+	subFS, err := fs.Sub(webFiles, "web")
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	// Static files
-	fileServer := http.FileServer(http.Dir("./web"))
+	fileServer := http.FileServer(http.FS(subFS))
 	mux.Handle("GET /", fileServer)
 
 	return mux

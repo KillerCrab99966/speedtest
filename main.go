@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"embed"
 	"fmt"
 	"log"
 	"os"
@@ -11,6 +12,11 @@ import (
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 )
+
+// Embed static files
+//
+//go:embed all:web
+var webFiles embed.FS
 
 func main() {
 	cfg, err := getConfig()
