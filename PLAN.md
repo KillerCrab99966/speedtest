@@ -10,6 +10,6 @@
     3. ~~Fetch results after next test and display next test time~~
     4. ~~Dark mode~~
     5. ~~Results time periods (7 days, 30 days, 1 year, all-time etc)~~
-    6. Test time chart scaling
+    6. ~~Test time chart scaling~~
 7. ~~Configuration~~
 8. README

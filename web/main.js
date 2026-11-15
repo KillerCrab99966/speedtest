@@ -3,13 +3,13 @@ let latestResults;
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-async function main(period) {
+async function main(period, scale) {
 	while (true) {
 		// Fetch the and update results
 		latestResults = await fetchResults(period);
 		if (latestResults) {
 			console.log("Fetched results");
-			updateCharts(latestResults);
+			updateCharts(latestResults, scale);
 			console.log("Updated charts");
 		}
 
@@ -31,8 +31,7 @@ async function main(period) {
 
 		// Calculate time to next test finishing
 		const testDuration = 70000;
-		let timeUntilTestFinish =
-			nextTestStartTime.getTime() - Date.now() + testDuration;
+		let timeUntilTestFinish = nextTestStartTime.getTime() - Date.now() + testDuration;
 
 		// Ensure time is not greater than integer limit,
 		// otherwise it gets set to 0
@@ -59,14 +58,16 @@ async function main(period) {
 	}
 }
 
-function updateCharts(results) {
-	// Convert bytes to megabytes
-	results.forEach((r) => {
-		r.bytes_sent = Number((r.bytes_sent / (1024 * 1024)).toFixed(2));
-		r.bytes_received = Number(
-			(r.bytes_received / (1024 * 1024)).toFixed(2),
-		);
-	});
+function updateCharts(results, scale) {
+	// Convert bytes to megabytes.
+	//
+	// Results are copied to avoid modifying the cached
+	// results each time the charts are updated.
+	const processedResults = results.map((r) => ({
+		...r,
+		bytes_sent: Number((r.bytes_sent / (1024 * 1024)).toFixed(2)),
+		bytes_received: Number((r.bytes_received / (1024 * 1024)).toFixed(2)),
+	}));
 
 	// Draw the charts
 	const chartConfigs = [
@@ -108,25 +109,75 @@ function updateCharts(results) {
 		},
 	];
 
-	drawCharts(chartConfigs, results);
+	drawCharts(chartConfigs, processedResults, scale);
 }
 
-function drawCharts(chartConfigs, results) {
+function drawCharts(chartConfigs, results, scale) {
 	const labels = results.map((item) => new Date(item.timestamp));
 
 	chartConfigs.forEach((config) => {
-		const data = results.map((item) => item[config.key]);
-		drawChart(config.id, labels, config, data);
+		let data;
+		if (scale == "equal") {
+			data = results.map((item) => item[config.key]);
+		} else {
+			data = results.map((item) => ({
+				x: new Date(item.timestamp).getTime(),
+				y: item[config.key],
+			}));
+		}
+		drawChart(config.id, labels, config, data, scale);
 	});
 }
 
-function drawChart(canvasID, labels, config, data) {
+function drawChart(canvasID, labels, config, data, scale) {
 	const canvas = document.getElementById(canvasID);
 	if (!canvas) return;
 
 	const existingChart = Chart.getChart(canvas);
 	if (existingChart) {
 		existingChart.destroy();
+	}
+
+	const options = {
+		responsive: true,
+		maintainAspectRatio: false,
+		scales: {
+			x: {
+				ticks: {
+					// Format the X-axis labels to show only time
+					callback: function (val) {
+						const timestamp = this.getLabelForValue(val);
+						return new Date(timestamp).toLocaleTimeString();
+					},
+				},
+			},
+			y: {
+				beginAtZero: true,
+			},
+		},
+		plugins: {
+			tooltip: {
+				callbacks: {
+					// Format the hover tooltip to show both date and time
+					title: function (context) {
+						const timestamp = context[0].label;
+						return new Date(timestamp).toLocaleString();
+					},
+				},
+			},
+		},
+	};
+
+	// Adjust options for time-based scaling
+	if (scale == "time-based") {
+		options.scales.x.type = "linear";
+		options.scales.x.ticks.callback = function (val) {
+			return new Date(val).toLocaleTimeString();
+		};
+		options.plugins.tooltip.callbacks.title = function (context) {
+			const timestamp = context[0].parsed.x;
+			return new Date(timestamp).toLocaleString();
+		};
 	}
 
 	return new Chart(canvas, {
@@ -143,35 +194,7 @@ function drawChart(canvasID, labels, config, data) {
 				},
 			],
 		},
-		options: {
-			responsive: true,
-			maintainAspectRatio: false,
-			scales: {
-				x: {
-					ticks: {
-						// Format the X-axis labels to show only time
-						callback: function (val) {
-							const timestamp = this.getLabelForValue(val);
-							return new Date(timestamp).toLocaleTimeString();
-						},
-					},
-				},
-				y: {
-					beginAtZero: true,
-				},
-			},
-			plugins: {
-				tooltip: {
-					callbacks: {
-						// Format the hover tooltip to show both date and time
-						title: function (context) {
-							const timestamp = context[0].label;
-							return new Date(timestamp).toLocaleString();
-						},
-					},
-				},
-			},
-		},
+		options: options,
 	});
 }
 
@@ -207,21 +230,31 @@ async function fetchNext() {
 	}
 }
 
-main(localStorage.getItem("resultsPeriod"));
+const resultsPeriod = localStorage.getItem("resultsPeriod") || "24h";
+const chartScale = localStorage.getItem("chartScale") || "equal";
 
-document.getElementById("results-period-select").value =
-	localStorage.getItem("resultsPeriod") || "24h";
+main(resultsPeriod, chartScale);
 
-document
-	.getElementById("results-period-select")
-	.addEventListener("change", async (event) => {
-		const period = event.target.value;
-		localStorage.setItem("resultsPeriod", period);
+document.getElementById("results-period-select").value = resultsPeriod;
 
-		latestResults = await fetchResults(period);
-		if (latestResults) {
-			console.log("Fetched results");
-			updateCharts(latestResults);
-			console.log("Updated charts");
-		}
-	});
+document.getElementById("results-period-select").addEventListener("change", async (event) => {
+	const period = event.target.value;
+	localStorage.setItem("resultsPeriod", period);
+
+	latestResults = await fetchResults(period);
+	if (latestResults) {
+		console.log("Fetched results");
+		updateCharts(latestResults);
+		console.log("Updated charts");
+	}
+});
+
+document.getElementById("chart-scale-select").value = chartScale;
+
+document.getElementById("chart-scale-select").addEventListener("change", async (event) => {
+	const scale = event.target.value;
+	localStorage.setItem("chartScale", scale);
+
+	updateCharts(latestResults, scale);
+	console.log("Updated charts");
+});
