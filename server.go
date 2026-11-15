@@ -29,11 +29,29 @@ func initRoutes(db *sql.DB, c *cron.Cron) *http.ServeMux {
 	return mux
 }
 
-func handleResults(db *sql.DB, w http.ResponseWriter, _ *http.Request) {
+func handleResults(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
+	// Requested time period
+	periodStr := r.URL.Query().Get("period")
+	var period time.Duration
+	switch periodStr {
+	case "24h", "":
+		period = 24 * time.Hour
+	case "7d":
+		period = 7 * 24 * time.Hour
+	case "30d":
+		period = 30 * 24 * time.Hour
+	case "1y":
+		period = 365 * 24 * time.Hour
+	case "all":
+		period = 0
+	default:
+		period = 24 * time.Hour
+	}
+
 	// Get the results from past 24hrs
-	results, err := getResultsAsJSON(db, 24*time.Hour)
+	results, err := getResultsAsJSON(db, period)
 	if err != nil {
 		log.Printf("Error getting results: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)

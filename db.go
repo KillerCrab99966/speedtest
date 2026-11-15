@@ -90,10 +90,16 @@ func getResultsAsJSON(db *sql.DB, t time.Duration) ([]byte, error) {
         )
     )
     FROM results
-    WHERE julianday(timestamp) >= (julianday('now') - ?);
     `
+
+	var args []any
+	if t > 0 {
+		query += ` WHERE julianday(timestamp) >= (julianday('now') - ?)`
+		args = append(args, t.Hours()/24)
+	}
+
 	var jsonBytes []byte
-	err := db.QueryRow(query, t.Hours()/24).Scan(&jsonBytes)
+	err := db.QueryRow(query, args...).Scan(&jsonBytes)
 
 	if err != nil {
 		return nil, fmt.Errorf("query failed: %w", err)

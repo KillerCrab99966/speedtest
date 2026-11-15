@@ -1,14 +1,15 @@
 let nextTestStartTime;
+let latestResults;
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-async function main() {
+async function main(period) {
 	while (true) {
 		// Fetch the and update results
-		const results = await fetchResults();
-		if (results) {
+		latestResults = await fetchResults(period);
+		if (latestResults) {
 			console.log("Fetched results");
-			updateCharts(results);
+			updateCharts(latestResults);
 			console.log("Updated charts");
 		}
 
@@ -148,8 +149,8 @@ function drawChart(canvasID, labels, config, data) {
 			scales: {
 				x: {
 					ticks: {
-						// Format the X-axis labels to show ONLY time
-						callback: function (val, _) {
+						// Format the X-axis labels to show only time
+						callback: function (val) {
 							const timestamp = this.getLabelForValue(val);
 							return new Date(timestamp).toLocaleTimeString();
 						},
@@ -162,7 +163,7 @@ function drawChart(canvasID, labels, config, data) {
 			plugins: {
 				tooltip: {
 					callbacks: {
-						// Format the hover tooltip to show BOTH date and time
+						// Format the hover tooltip to show both date and time
 						title: function (context) {
 							const timestamp = context[0].label;
 							return new Date(timestamp).toLocaleString();
@@ -174,9 +175,9 @@ function drawChart(canvasID, labels, config, data) {
 	});
 }
 
-async function fetchResults() {
+async function fetchResults(period) {
 	try {
-		const response = await fetch("/api/results");
+		const response = await fetch(`/api/results?period=${period}`);
 
 		if (!response.ok) {
 			throw new Error("Failed to fetch results");
@@ -206,4 +207,21 @@ async function fetchNext() {
 	}
 }
 
-main();
+main(localStorage.getItem("resultsPeriod"));
+
+document.getElementById("results-period-select").value =
+	localStorage.getItem("resultsPeriod") || "24h";
+
+document
+	.getElementById("results-period-select")
+	.addEventListener("change", async (event) => {
+		const period = event.target.value;
+		localStorage.setItem("resultsPeriod", period);
+
+		latestResults = await fetchResults(period);
+		if (latestResults) {
+			console.log("Fetched results");
+			updateCharts(latestResults);
+			console.log("Updated charts");
+		}
+	});

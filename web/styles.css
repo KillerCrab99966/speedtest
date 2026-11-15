@@ -55,6 +55,13 @@ a:visited {
 	box-sizing: border-box;
 }
 
+.chart-options {
+	margin-bottom: 12px;
+	display: flex;
+	justify-content: flex-end;
+	gap: 0.5rem;
+}
+
 .chart-grid {
 	display: grid;
 	grid-template-columns: 1fr;
