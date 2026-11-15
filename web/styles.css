@@ -1,25 +1,18 @@
 :root {
-	--bg-base: hsl(0, 0%, 95%);
-	--bg-elevated: #fff;
+	color-scheme: light dark;
 
-	--primary: hsl(0, 0%, 10%);
-	--primary-hover: hsl(0, 0%, 15%);
-	--primary-text: hsl(0, 0%, 98%);
+	--bg-base: light-dark(hsl(0, 0%, 95%), hsl(0, 0%, 5%));
+	--bg-elevated: light-dark(#fff, hsl(0, 0%, 10%));
 
-	--secondary: hsl(0, 0%, 95%);
-	--secondary-hover: hsl(0, 0%, 90%);
-	--secondary-text: hsl(0, 0%, 10%);
+	--border-subtle: light-dark(hsl(0, 0%, 85%), hsl(0, 0%, 15%));
 
-	--tertiary: hsl(0, 0%, 65%);
-	--border-subtle: hsl(0, 0%, 85%);
-
-	--text-primary: hsl(0, 0%, 10%);
-	--text-secondary: hsl(0, 0%, 30%);
+	--text-primary: light-dark(hsl(0, 0%, 10%), hsl(0, 0%, 90%));
+	--text-secondary: light-dark(hsl(0, 0%, 30%), hsl(0, 0%, 75%));
 	--text-link: hsl(220, 100%, 60%);
 
-	--next-test: hsl(39, 100%, 70%);
-	--next-test-border: hsl(39, 100%, 50%);
-	--next-test-text: hsl(39, 100%, 40%);
+	--next-test: light-dark(hsl(39, 100%, 70%), hsl(39, 100%, 60%));
+	--next-test-border: light-dark(hsl(39, 100%, 50%), hsl(39, 100%, 40%));
+	--next-test-text: light-dark(hsl(39, 100%, 40%), hsl(39, 100%, 30%));
 }
 
 body,
