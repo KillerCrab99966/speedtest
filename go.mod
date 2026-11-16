@@ -1,4 +1,4 @@
-module github.com/KillerCrab99966/speedtest
+module github.com/KillerCrab99966/speedtest-server
 
 go 1.27.4
 
