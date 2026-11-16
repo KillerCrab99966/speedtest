@@ -258,3 +258,39 @@ document.getElementById("chart-scale-select").addEventListener("change", async (
 	updateCharts(latestResults, scale);
 	console.log("Updated charts");
 });
+
+document.body.dataset.theme = localStorage.getItem("theme") || "";
+updateThemeLinkText(document.body.dataset.theme);
+
+document.getElementById("change-theme-link").addEventListener("click", (event) => {
+	event.preventDefault();
+	switch (document.body.dataset.theme) {
+		case "":
+			document.body.dataset.theme = "light";
+			break;
+		case "light":
+			document.body.dataset.theme = "dark";
+			break;
+		case "dark":
+			document.body.dataset.theme = "";
+			break;
+	}
+
+	const theme = document.body.dataset.theme;
+	localStorage.setItem("theme", theme);
+	updateThemeLinkText(theme);
+});
+
+function updateThemeLinkText(theme) {
+	switch (theme) {
+		case "":
+			document.getElementById("change-theme-link").innerText = "Auto";
+			break;
+		case "light":
+			document.getElementById("change-theme-link").innerText = "Light";
+			break;
+		case "dark":
+			document.getElementById("change-theme-link").innerText = "Dark";
+			break;
+	}
+}

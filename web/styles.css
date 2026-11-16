@@ -25,6 +25,14 @@ html {
 	background: var(--bg-base);
 }
 
+body[data-theme="light"] {
+	color-scheme: light;
+}
+
+body[data-theme="dark"] {
+	color-scheme: dark;
+}
+
 a {
 	color: var(--text-link);
 	text-decoration-line: none;
