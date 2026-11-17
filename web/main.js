@@ -117,7 +117,7 @@ function drawCharts(chartConfigs, results, scale) {
 
 	chartConfigs.forEach((config) => {
 		let data;
-		if (scale == "equal") {
+		if (scale === "equal") {
 			data = results.map((item) => item[config.key]);
 		} else {
 			data = results.map((item) => ({
@@ -169,7 +169,7 @@ function drawChart(canvasID, labels, config, data, scale) {
 	};
 
 	// Adjust options for time-based scaling
-	if (scale == "time-based") {
+	if (scale === "time-based") {
 		options.scales.x.type = "linear";
 		options.scales.x.ticks.callback = function (val) {
 			return new Date(val).toLocaleTimeString();
@@ -259,11 +259,31 @@ document.getElementById("chart-scale-select").addEventListener("change", async (
 	console.log("Updated charts");
 });
 
+document.getElementById("chart-grid").addEventListener("dblclick", (event) => {
+	// Maximise the chart and dim the background
+	target = event.target.closest(".chart-card");
+	document.getElementById("chart-maximised-dimmer").classList.add("dim");
+	target.classList.add("maximised");
+});
+
+document.getElementById("chart-maximised-dimmer").addEventListener("click", () => {
+	// Hide maximised cards and the dimmer
+	hideMaximisedCharts();
+});
+
+document.addEventListener("keydown", (event) => {
+	if (event.key === "Escape") {
+		hideMaximisedCharts();
+	}
+});
+
 document.body.dataset.theme = localStorage.getItem("theme") || "";
 updateThemeLinkText(document.body.dataset.theme);
 
 document.getElementById("change-theme-link").addEventListener("click", (event) => {
 	event.preventDefault();
+
+	// Rotate through the theme settings
 	switch (document.body.dataset.theme) {
 		case "":
 			document.body.dataset.theme = "light";
@@ -280,6 +300,14 @@ document.getElementById("change-theme-link").addEventListener("click", (event) =
 	localStorage.setItem("theme", theme);
 	updateThemeLinkText(theme);
 });
+
+function hideMaximisedCharts() {
+	for (const chart of document.getElementsByClassName("chart-card maximised")) {
+		chart.classList.remove("maximised");
+	}
+
+	document.getElementById("chart-maximised-dimmer").classList.remove("dim");
+}
 
 function updateThemeLinkText(theme) {
 	switch (theme) {

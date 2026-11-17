@@ -13,6 +13,8 @@
 	--next-test: light-dark(hsl(39, 100%, 70%), hsl(39, 100%, 60%));
 	--next-test-border: light-dark(hsl(39, 100%, 50%), hsl(39, 100%, 40%));
 	--next-test-text: light-dark(hsl(39, 100%, 40%), hsl(39, 100%, 30%));
+
+	--dimmer-colour: hsla(0, 0%, 0%, 70%);
 }
 
 body,
@@ -90,14 +92,37 @@ a:visited {
 	box-sizing: border-box;
 }
 
+.chart-card.maximised {
+	position: fixed;
+	inset: 64px;
+	width: auto;
+	height: auto;
+	z-index: 10;
+}
+
+.screen-dimmer {
+	display: none;
+	position: fixed;
+	inset: 0;
+	width: 100dvw;
+	height: 100dvh;
+	background: var(--dimmer-colour);
+	z-index: 5;
+}
+
+.screen-dimmer.dim {
+	display: block;
+}
+
 .info-footer {
 	color: var(--text-secondary);
 	font-size: 1rem;
 	width: 100%;
-	padding-bottom: 16px;
+	padding: 0 1rem 1rem 1rem;
 	display: flex;
 	justify-content: center;
 	align-items: center;
+	box-sizing: border-box;
 }
 
 @media (min-width: 1080px) {
