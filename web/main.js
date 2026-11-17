@@ -3,15 +3,10 @@ let latestResults;
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-async function main(period, scale) {
+async function main(period) {
 	while (true) {
 		// Fetch the and update results
-		latestResults = await fetchResults(period);
-		if (latestResults) {
-			console.log("Fetched results");
-			updateCharts(latestResults, scale);
-			console.log("Updated charts");
-		}
+		await updateResults(period);
 
 		// Fetch and display the time of the next test
 		nextTestStartTime = await fetchNext();
@@ -58,6 +53,17 @@ async function main(period, scale) {
 	}
 }
 
+async function updateResults(period) {
+	latestResults = await fetchResults(period);
+	if (latestResults) {
+		console.log("Fetched results");
+		updateCharts(latestResults, document.getElementById("chart-scale-select").value);
+		console.log("Updated charts");
+		updateTable(latestResults);
+		console.log("Updated table");
+	}
+}
+
 function updateCharts(results, scale) {
 	// Convert bytes to megabytes.
 	//
@@ -65,8 +71,8 @@ function updateCharts(results, scale) {
 	// results each time the charts are updated.
 	const processedResults = results.map((r) => ({
 		...r,
-		bytes_sent: Number((r.bytes_sent / (1024 * 1024)).toFixed(2)),
-		bytes_received: Number((r.bytes_received / (1024 * 1024)).toFixed(2)),
+		bytes_sent: Number((r.bytes_sent / (1024 * 1024)).toFixed(3)),
+		bytes_received: Number((r.bytes_received / (1024 * 1024)).toFixed(3)),
 	}));
 
 	// Draw the charts
@@ -86,13 +92,13 @@ function updateCharts(results, scale) {
 		{
 			id: "bytes-sent",
 			key: "bytes_sent",
-			label: "Bytes Sent",
+			label: "Megabytes Sent",
 			color: "rgb(255, 99, 132)",
 		},
 		{
 			id: "bytes-received",
 			key: "bytes_received",
-			label: "Bytes Received",
+			label: "Megabytes Received",
 			color: "rgb(255, 159, 64)",
 		},
 		{
@@ -198,6 +204,45 @@ function drawChart(canvasID, labels, config, data, scale) {
 	});
 }
 
+function updateTable(results) {
+	const table = document.getElementById("results-table").getElementsByTagName("tbody")[0];
+	table.innerHTML = "";
+
+	const keys = [
+		"timestamp",
+		"download",
+		"upload",
+		"bytes_sent",
+		"bytes_received",
+		"ping",
+		"jitter",
+		"server",
+	];
+
+	const processedResults = results.map((r) => ({
+		...r,
+		bytes_sent: Number((r.bytes_sent / (1024 * 1024)).toFixed(3)),
+		bytes_received: Number((r.bytes_received / (1024 * 1024)).toFixed(3)),
+	}));
+
+	// Create a row for each result
+	for (const result of processedResults) {
+		const row = table.insertRow();
+
+		for (const key of keys) {
+			const cell = row.insertCell();
+
+			// Extract server name
+			if (key === "server") {
+				cell.innerText = result.server.name;
+				continue;
+			}
+
+			cell.innerText = result[key];
+		}
+	}
+}
+
 async function fetchResults(period) {
 	try {
 		const response = await fetch(`/api/results?period=${period}`);
@@ -230,10 +275,21 @@ async function fetchNext() {
 	}
 }
 
+const dataDisplay = localStorage.getItem("dataDisplay") || "charts";
 const resultsPeriod = localStorage.getItem("resultsPeriod") || "24h";
 const chartScale = localStorage.getItem("chartScale") || "equal";
 
 main(resultsPeriod, chartScale);
+
+document.getElementById("data-display-select").value = dataDisplay;
+document.body.dataset.display = dataDisplay;
+
+document.getElementById("data-display-select").addEventListener("change", async (event) => {
+	const display = event.target.value;
+	localStorage.setItem("dataDisplay", display);
+
+	document.body.dataset.display = display;
+});
 
 document.getElementById("results-period-select").value = resultsPeriod;
 
@@ -241,12 +297,7 @@ document.getElementById("results-period-select").addEventListener("change", asyn
 	const period = event.target.value;
 	localStorage.setItem("resultsPeriod", period);
 
-	latestResults = await fetchResults(period);
-	if (latestResults) {
-		console.log("Fetched results");
-		updateCharts(latestResults);
-		console.log("Updated charts");
-	}
+	await updateResults(period);
 });
 
 document.getElementById("chart-scale-select").value = chartScale;
@@ -260,10 +311,21 @@ document.getElementById("chart-scale-select").addEventListener("change", async (
 });
 
 document.getElementById("chart-grid").addEventListener("dblclick", (event) => {
+	event.preventDefault();
+
+	const target = event.target.closest(".chart-card");
+	if (!target) return;
+
 	// Maximise the chart and dim the background
-	target = event.target.closest(".chart-card");
 	document.getElementById("chart-maximised-dimmer").classList.add("dim");
 	target.classList.add("maximised");
+});
+
+document.getElementById("results-table").addEventListener("click", (event) => {
+	const th = event.target.closest("th");
+	if (!th) return;
+
+	sortTable(th.cellIndex);
 });
 
 document.getElementById("chart-maximised-dimmer").addEventListener("click", () => {
@@ -321,4 +383,52 @@ function updateThemeLinkText(theme) {
 			document.getElementById("change-theme-link").innerText = "Dark";
 			break;
 	}
+}
+
+function sortTable(columnIndex) {
+	const table = document.getElementById("results-table");
+	const tbody = table.tBodies[0];
+	const rows = Array.from(tbody.rows);
+
+	// Get sort direction
+	const header = table.tHead.rows[0].cells[columnIndex];
+	const isAscending = header.dataset.order !== "asc";
+
+	// Reset arrows and state
+	Array.from(table.tHead.rows[0].cells).forEach((th) => {
+		delete th.dataset.order;
+		th.innerHTML = th.innerHTML.replace(/ [▲▼↕]/, " ↕");
+	});
+
+	// Set the new direction
+	header.dataset.order = isAscending ? "asc" : "desc";
+	header.innerHTML = header.innerHTML.replace(" ↕", isAscending ? " ▲" : " ▼");
+
+	// Sort the rows
+	rows.sort((rowA, rowB) => {
+		const cellA = rowA.cells[columnIndex].innerText.trim();
+		const cellB = rowB.cells[columnIndex].innerText.trim();
+
+		const dateA = new Date(cellA).getTime();
+		const dateB = new Date(cellB).getTime();
+
+		let comparison = 0;
+		if (!isNaN(dateA) && !isNaN(dateB)) {
+			comparison = dateA - dateB;
+		} else {
+			const numA = parseFloat(cellA);
+			const numB = parseFloat(cellB);
+
+			if (!isNaN(numA) && !isNaN(numB)) {
+				comparison = numA - numB;
+			} else {
+				comparison = cellA.localeCompare(cellB);
+			}
+		}
+
+		return isAscending ? comparison : -comparison;
+	});
+
+	// Re-append sorted rows to the tbody
+	rows.forEach((row) => tbody.appendChild(row));
 }

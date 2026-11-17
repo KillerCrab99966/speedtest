@@ -15,19 +15,26 @@
 				<span id="next-test-time-text">Next speedtest:</span>
 			</div>
 
-			<div class="chart-options">
-				<select name="results-period" id="results-period-select">
-					<option value="24h">24 Hours</option>
-					<option value="7d">7 Days</option>
-					<option value="30d">30 Days</option>
-					<option value="1y">1 Year</option>
-					<option value="all">All Time</option>
+			<div class="options">
+				<select name="data-display" id="data-display-select">
+					<option value="charts">Charts</option>
+					<option value="table">Table</option>
 				</select>
 
-				<select name="chart-scale" id="chart-scale-select">
-					<option value="equal">Equal Scale</option>
-					<option value="time-based">Time-Based Scale</option>
-				</select>
+				<div class="data-options">
+					<select name="results-period" id="results-period-select">
+						<option value="24h">24 Hours</option>
+						<option value="7d">7 Days</option>
+						<option value="30d">30 Days</option>
+						<option value="1y">1 Year</option>
+						<option value="all">All Time</option>
+					</select>
+
+					<select name="chart-scale" id="chart-scale-select">
+						<option value="equal">Equal Scale</option>
+						<option value="time-based">Time-Based Scale</option>
+					</select>
+				</div>
 			</div>
 
 			<div id="chart-grid" class="chart-grid">
@@ -48,12 +55,30 @@
 				</div>
 
 				<div class="chart-card">
-					<canvas id="jitter"></canvas>
+					<canvas id="ping"></canvas>
 				</div>
 
 				<div class="chart-card">
-					<canvas id="ping"></canvas>
+					<canvas id="jitter"></canvas>
 				</div>
+			</div>
+
+			<div class="results-table-container">
+				<table id="results-table" class="results-table">
+					<thead>
+						<tr>
+							<th>Timestamp ↕</th>
+							<th>Download ↕</th>
+							<th>Upload ↕</th>
+							<th>Megabytes Sent ↕</th>
+							<th>Megabytes Received ↕</th>
+							<th>Ping ↕</th>
+							<th>Jitter ↕</th>
+							<th>Server Name ↕</th>
+						</tr>
+					</thead>
+					<tbody></tbody>
+				</table>
 			</div>
 		</div>
 

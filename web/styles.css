@@ -36,6 +36,20 @@ body[data-theme="dark"] {
 	color-scheme: dark;
 }
 
+body[data-display="charts"] .chart-grid {
+	display: grid;
+}
+body[data-display="charts"] .results-table-container {
+	display: none;
+}
+
+body[data-display="table"] .chart-grid {
+	display: none;
+}
+body[data-display="table"] .results-table-container {
+	display: block;
+}
+
 a {
 	color: var(--text-link);
 	text-decoration-line: none;
@@ -48,7 +62,9 @@ a:visited {
 .main {
 	margin: 32px auto;
 	padding: 0 32px;
+	width: 100%;
 	max-width: 1500px;
+	box-sizing: border-box;
 }
 
 .next-test-time {
@@ -67,10 +83,15 @@ a:visited {
 	box-sizing: border-box;
 }
 
-.chart-options {
+.options {
 	margin-bottom: 12px;
 	display: flex;
-	justify-content: flex-end;
+	justify-content: space-between;
+}
+
+.data-options {
+	display: flex;
+	justify-content: space-between;
 	gap: 0.5rem;
 }
 
@@ -91,6 +112,8 @@ a:visited {
 	border: 3px solid var(--border-subtle);
 	border-radius: 8px;
 	box-sizing: border-box;
+	touch-action: manipulation;
+	user-select: none;
 }
 
 .chart-card.maximised {
@@ -99,6 +122,22 @@ a:visited {
 	width: auto;
 	height: auto;
 	z-index: 10;
+}
+
+.results-table {
+	width: 100%;
+	border-collapse: collapse;
+	background: var(--bg-elevated);
+}
+
+.results-table th {
+	cursor: pointer;
+}
+
+.results-table th,
+.results-table td {
+	border: 2px solid var(--border-subtle);
+	padding: 0.5rem;
 }
 
 .screen-dimmer {
