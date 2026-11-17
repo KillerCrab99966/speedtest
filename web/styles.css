@@ -25,6 +25,7 @@ html {
 	margin: 0;
 	padding: 0;
 	background: var(--bg-base);
+	display: flow-root;
 }
 
 body[data-theme="light"] {
